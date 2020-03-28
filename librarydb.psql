@@ -1,0 +1,132 @@
+-- psql library -a -f librarydb.psql  
+
+/*
+cascade == LEAVE NO ORPHANS
+all children of a parent 
+*/
+
+DROP TABLE IF EXISTS users cascade;
+DROP TABLE IF EXISTS addresses; 
+DROP TABLE IF EXISTS books cascade;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS users_books cascade; 
+
+CREATE TABLE users (
+  id serial,
+  username VARCHAR(25) NOT NULL,
+  enabled boolean DEFAULT TRUE,
+  PRIMARY KEY (id)
+  );
+
+INSERT INTO users (id, username, enabled) VALUES (20, 'john smith', false);
+INSERT INTO users (id, username, enabled) VALUES (2, 'diane', false);
+INSERT INTO users (id, username, enabled) VALUES (3, 'porter', false);
+INSERT INTO users (id, username, enabled) VALUES (12, 'madeon', false);
+INSERT INTO users (id, username, enabled) VALUES (13, 'technic angel', true);
+
+ALTER TABLE users ADD COLUMN last_login timestamp NOT NULL DEFAULT NOW(); 
+
+SELECT * FROM users ORDER BY id ASC; 
+
+/*
+A many-to-many relationship exists between two entities if for one entity instance there may be multiple records in the other table and vice versa.
+*/
+ALTER TABLE users 
+ADD COLUMN book_title VARCHAR(25),
+ADD COLUMN review_content VARCHAR(50),
+ADD COLUMN rating int,
+ADD COLUMN address VARCHAR(255);
+
+/*
+relationship : id is PRIMARY KEY of users table. also FOREIGN KEY and PRIMARY KEY of addresses table
+*/
+
+CREATE TABLE addresses (
+  user_id int NOT NULL,
+  street VARCHAR(30) NOT NULL,
+  city VARCHAR(30) NOT NULL,
+  state VARCHAR(30) NOT NULL,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+/*
+ONE user can have MANY books
+ONE book can have MANY reviews
+*/
+
+CREATE TABLE books (
+  id serial,
+  title VARCHAR(100) NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  published_date timestamp NOT NULL,
+  isbn int,
+  PRIMARY KEY (id),
+  UNIQUE (isbn)
+);
+
+CREATE TABLE reviews (
+  id serial,
+  book_id int NOT NULL,
+  user_id int NOT NULL,
+  review_content VARCHAR(255), 
+  rating int,
+  published_date timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE, 
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+/*
+use 3rd cross reference table to hold relationships b/w 2 entities (PK of 2 tables)
+ONE user checks out MANY books
+ONE book has been checked out by MANY users
+*/
+
+CREATE TABLE users_books (
+  user_id int NOT NULL,
+  book_id int NOT NULL,
+  checkout_date timestamp,
+  return_date timestamp,
+  PRIMARY KEY (user_id, book_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON UPDATE CASCADE
+);
+
+------------------------------------------------------------------------
+/** time to insert data **/
+
+INSERT INTO users (id, username) VALUES (100, 'Ravioli Smith');
+
+INSERT INTO addresses (user_id, street,  city, state) 
+VALUES (100, '1 Market Street', 'San Francisco', 'CA');
+
+INSERT INTO books (id, title, author, published_date)
+VALUES (1, 'my first sql book', 'mary parker', NOW()); 
+
+INSERT INTO users_books (user_id, book_id, checkout_date)
+VALUES (100, 1, NOW());
+
+INSERT INTO reviews (id, book_id, user_id, review_content)
+VALUES (1, 1, 100, 'My first review');
+
+INSERT INTO books (id, title, author, published_date)
+VALUES (2, 'my second sql book', 'john mayer', NOW());
+
+INSERT INTO users_books (user_id, book_id checkout_date)
+VALUES (100, 2, NOW());
+
+INSERT INTO reviews (id, book_id, user_id, review_content)
+VALUES (2, 2, 100, 'My second review'); 
+
+
+------------------------------------------------------------------------
+
+SELECT * FROM users ORDER BY id ASC; 
+SELECT * FROM addresses; 
+SELECT * FROM books; 
+SELECT * FROM users_books;
+SELECT * FROM reviews; 
+
+
+ 
