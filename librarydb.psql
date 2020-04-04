@@ -119,6 +119,9 @@ VALUES (100, 2, NOW());
 INSERT INTO reviews (id, book_id, user_id, review_content)
 VALUES (2, 2, 100, 'My second review'); 
 
+INSERT INTO books (id, title, author, published_date)
+VALUES (3, 'my third sql book', 'john legend', NOW());
+
 
 ------------------------------------------------------------------------
 
@@ -128,5 +131,29 @@ SELECT * FROM books;
 SELECT * FROM users_books;
 SELECT * FROM reviews; 
 
+---- JOIN STATEMENTS ARE NOT WORKING FOR ME ---- 
 
+/*
+LEFT JOIN = connect users to their addresses. NULL if no address included
+*/
+-- SELECT users.*, addresses.* FROM users
+-- LEFT JOIN addresses
+-- ON users.id 
  
+/*
+RIGHT JOIN = all data on second table is included 
+username is returned as NULL for the book not associated with any user
+if a LEFT JOIN is used, all users will be returned, but not all books are returned bc they were not checked out
+*/
+
+-- SELECT users.username, books.title FROM users
+-- RIGHT JOIN users_books ON (users_books.user_id = user.id)
+-- RIGHT JOIN books ON books.id = users_books.book_id;
+
+/*
+formatting the data
+*/
+
+SELECT CONCAT(title, ' by ', author) AS "Books By" FROM books;
+
+
