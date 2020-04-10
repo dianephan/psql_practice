@@ -1,0 +1,68 @@
+-- primary keys must be definitely unique 
+-- psql pokemon -a -f pokemondb.psql  
+
+DROP TABLE IF EXISTS users cascade;
+DROP TABLE IF EXISTS cards cascade;
+DROP TABLE IF EXISTS collections cascade;
+
+CREATE TABLE users(
+    id SERIAL,
+    userid TEXT,
+    email TEXT,
+    pass TEXT,
+    PRIMARY KEY (id) 
+);
+
+CREATE TABLE cards(
+    id SERIAL,
+    PRIMARY KEY (id),
+    poke_name TEXT
+);
+-- many to many table 
+CREATE TABLE collections(
+    id SERIAL,
+    PRIMARY KEY (id),
+    fk_user_id INT REFERENCES users (id),
+    fk_card_id INT REFERENCES cards (id)
+);
+
+CREATE OR REPLACE FUNCTION insert_user(username TEXT, mail TEXT, pw TEXT) RETURNS void AS
+    $$
+    BEGIN
+        INSERT INTO users (userid, email, pass) VALUES (username, mail, pw);
+    END;
+    $$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION insert_cards(pokemon_name TEXT) RETURNS void AS
+    $$
+    BEGIN
+        INSERT INTO cards (poke_name) VALUES (pokemon_name);
+    END;
+    $$ LANGUAGE PLPGSQL;
+
+CREATE OR REPLACE FUNCTION collect_cards(user_id INT, pokemon_id INT) RETURNS void AS
+    $$
+    BEGIN
+        INSERT INTO collections (fk_user_id, fk_card_id) VALUES (user_id, pokemon_id);
+    END;
+    $$ LANGUAGE PLPGSQL;
+
+
+SELECT insert_user('diane', 'd@gmail.com', 'p0ma');
+SELECT insert_user('chandler', 'c@gmail.com', 'pww');
+SELECT insert_cards('charmander');
+SELECT insert_cards('jigglypuff');
+SELECT insert_cards('lavitar');
+
+INSERT INTO collections (fk_user_id, fk_card_id) VALUES (1, 1);
+INSERT INTO collections (fk_user_id, fk_card_id) VALUES (2, 3);
+
+DROP TABLE users;
+-- must drop cascade to drop the dependent objects too otherwise DROP users cannot be done
+
+SELECT * FROM users;
+SELECT * FROM cards; 
+SELECT * FROM collections;
+
+
+-- check \d+ collections in pokemon db to see the relationships for that table 
